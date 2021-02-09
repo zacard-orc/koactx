@@ -10,5 +10,5 @@ curl -H "Content-Type: application/json" \
   -d '{"plain":"abcd" }'  \
   "http://127.0.0.1:3000/api/sm3" -v
   
-=> 66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0
+{"RSP_HEAD":{},"RSP_BODY":{"cryptoRet":"82ec580fe6d36ae4f81cae3c73f4a5b3b5a09c943172dc9053c69fd8e18dca1e"}}
 ```

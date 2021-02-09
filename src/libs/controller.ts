@@ -41,6 +41,16 @@ export const ctrSM3 = (ctx:Koa.ExtendableContext,next:Koa.Next)=>{
         plain
     } = payload;
     const { sm3 } = sm;
-    ctx.body = sm3(plain)
+
+    const crypto: sm3Response = {
+        cryptoRet: sm3(plain)
+    }
+
+    const ret: gmResponse<any, sm3Response> = {
+        RSP_HEAD: {},
+        RSP_BODY: crypto
+    }
+    ctx.body = ret
+
     next();
 }
