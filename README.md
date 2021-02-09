@@ -2,6 +2,13 @@
 koa 部分api实验环境，对应iOS Gateway项目  
 koa+ts+tsdx
 
+# How to use
+```shell
+yarn
+yarn start # start tsdx watch
+yarn ms # start mock server
+```
+
 # reference
 ## sm3摘要
 ```bash
