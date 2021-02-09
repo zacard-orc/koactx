@@ -1,12 +1,22 @@
 import fs from 'fs';
 import archiver from 'archiver';
+import dayjs from 'dayjs';
 
 import logger from './logger';
 
 
 export const isDev: boolean = process.env.NODE_ENV === 'development';
 
-export const zipFiles = (fpath: string, flist: Array<string>, target: string) => {
+export const wait = (tmout:number):Promise<string> => {
+    return new Promise(resolve => {
+        setTimeout(()=>{
+            resolve('ok')
+        },tmout)
+    })
+}
+
+export const zipFiles =
+    (fpath: string, flist: Array<string>, target: string): Promise<ApiFarm.zipResult> => {
 
     const fixpath = fpath.slice(-1) === '/'
         ? fpath.slice(0, -1)
@@ -36,7 +46,13 @@ export const zipFiles = (fpath: string, flist: Array<string>, target: string) =>
         output.on('close', function () {
             logger.debug('zip total bytes = %d', am.pointer());
             logger.debug('zip target cloesd');
-            resolve('ok');
+            resolve({
+                filename: `${target}.gzip`,
+                filepath: `${fixpath}/${target}.gzip`,
+                bytes: am.pointer(),
+                modifyTs: Date.now(),
+                modifyTsDesc: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS')
+            });
         });
 
         output.on('end', function () {
