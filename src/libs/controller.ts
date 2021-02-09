@@ -31,7 +31,7 @@ export const ctrPerf = (ctx:Koa.ExtendableContext,next:Koa.Next)=>{
 
 export const ctrHello = (ctx:Koa.ExtendableContext, next:Koa.Next) => {
     ctx.append('resultCode', '0000');
-    ctx.body = 'Hello test'
+    ctx.body = 'Hello 7777'
     next();
 }
 
