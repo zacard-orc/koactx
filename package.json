@@ -1,15 +1,6 @@
 {
   "version": "0.1.0",
   "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
-  "engines": {
-    "node": ">=10"
-  },
   "scripts": {
     "start": "tsdx watch",
     "ms": "nodemon --watch dist/koavtx2.cjs.development.js mock/ms.js",
@@ -19,6 +10,15 @@
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
+  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
   },
   "peerDependencies": {},
   "husky": {
@@ -60,6 +60,7 @@
     "winston": "^3.3.3"
   },
   "dependencies": {
+    "@types/archiver": "^5.1.0",
     "@types/koa": "^2.11.7",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-router": "^7.4.1",

@@ -1,13 +1,14 @@
+import Koa from "koa";
+
 import fs from 'fs';
 import path from 'path';
-// import archiver from 'archiver';
 // import dayjs from 'dayjs';
 //
-//
+
 
 import logger from "./logger";
-import Koa from "koa";
 import {Socket} from "net";
+import {zipFiles} from './utils'
 
 import sm from 'sm-crypto'
 
@@ -64,8 +65,15 @@ export const ctrConfHighPri = async (_ctx: Koa.ExtendableContext, next: Koa.Next
     const prefix = '../src/Files';
     const dir = fs.readdirSync(path.resolve(__dirname, prefix));
 
+    const flist = dir.filter(el => el.includes('.json'));
 
-    console.log(dir)
+    zipFiles(path.resolve(__dirname, prefix), flist, 'mike')
+        .then(res=>{
+            logger.info('zip result => %s', res);
+        })
+        .catch(e=>{
+            logger.error('zip error => %s', e.message);
+        })
 
     next();
 }
