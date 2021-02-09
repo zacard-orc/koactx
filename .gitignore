@@ -5,3 +5,10 @@ dist
 logs
 .github
 .idea
+
+tmphtml
+
+
+# gzip files
+src/Files/*.gzip
+

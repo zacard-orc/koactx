@@ -7,7 +7,8 @@ import logger from './libs/logger'
 import {
   ctrPerf,
   ctrHello,
-  ctrSM3
+  ctrSM3,
+  ctrConfHighPri,
 } from './libs/controller';
 
 const app = new Koa();
@@ -16,6 +17,7 @@ const router = new Router();
 
 router.get('/',ctrHello);
 router.post('/api/sm3',ctrSM3);
+router.post('/api/ConfHighPri',ctrConfHighPri);
 
 app
     .use(bodyParser())
