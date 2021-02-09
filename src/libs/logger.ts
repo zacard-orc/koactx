@@ -19,6 +19,10 @@ const fmtBase = [
     }),
 ];
 
+const lyFormatFile = format.combine(
+    ...fmtBase,
+);
+
 if(isDev){
     fmtBase.unshift(
         format.colorize()
@@ -35,14 +39,14 @@ const lyTransports = {
         maxFiles: loggerMaxFiles,
         maxsize: loggerMaxsize,
         level: loggerLevel,
-        format: lyFormat,
+        format: lyFormatFile,
     }),
     exception: new transports.File({
         filename: path.resolve(__dirname, 'logs', 'exception.log'),
         maxFiles: loggerMaxFiles,
         maxsize: loggerMaxsize,
         level: loggerLevel,
-        format: lyFormat,
+        format: lyFormatFile,
     }),
     console: new transports.Console({
         level: 'debug',
