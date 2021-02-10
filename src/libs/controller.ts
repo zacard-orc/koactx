@@ -70,19 +70,30 @@ export const ctrSM3 = (ctx: Koa.ExtendableContext, next: Koa.Next) => {
  */
 export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     const prefix = '../src/Files';
+    const prefixDown = 'http://localhost:5000'
+    const {sm3} = sm;
+
+
     const dir = fs.readdirSync(path.resolve(__dirname, prefix));
 
     const flist = dir.filter(el => el.includes('.json'));
-    console.log(flist)
 
-    try{
-        const zipret = await zipFiles(path.resolve(__dirname, prefix), flist, 'mike');
-        logger.info('zip result => %j', zipret);
+    const prAll = flist.map(el=>{
+        const fnameprefix = el.split('.')[0];
+        return zipFiles(path.resolve(__dirname, prefix), [el], fnameprefix);
+    })
 
-        ctx.body = zipret;
-    } catch (e) {
-        logger.error('zip error => %s', e.message);
-    }
+    const zipRet = await Promise.all(prAll)
 
+    ctx.body = zipRet.map(el=>{
+        const buff = fs.readFileSync(el.filepath)
+        const digest = sm3(buff.toString())
+
+        return {
+            ...el,
+            digest,
+            downUrl: `${prefixDown}/${el.filename}`,
+        }
+    })
     await next();
 }

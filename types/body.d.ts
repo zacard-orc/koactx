@@ -12,12 +12,16 @@ declare namespace ApiFarm {
         cryptoRet: string
     }
 
-    interface zipResult {
+    interface zipAtomResult {
         filename: string,
         filepath: string,
         bytes: number,
         modifyTs: number,
         modifyTsDesc: string
+    }
+
+    interface zipPageResult extends zipAtomResult {
+        pageCode: string
     }
 
 
