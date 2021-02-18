@@ -17,7 +17,8 @@ export const wait = (tmout:number):Promise<string> => {
 
 export const zipFiles = (fpath: string,
                          flist: Array<string>,
-                         target: string): Promise<ApiFarm.zipAtomResult> => {
+                         target: string,
+                         pageCode?: string): Promise<ApiFarm.zipAtomResult> => {
 
     const fixpath = fpath.slice(-1) === '/'
         ? fpath.slice(0, -1)
@@ -52,7 +53,8 @@ export const zipFiles = (fpath: string,
                 filepath: `${fixpath}/${target}.gzip`,
                 bytes: am.pointer(),
                 modifyTs: Date.now(),
-                modifyTsDesc: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS')
+                modifyTsDesc: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                pageCode
             });
         });
 

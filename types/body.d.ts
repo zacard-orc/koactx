@@ -26,7 +26,8 @@ declare namespace ApiFarm {
         filepath: string,
         bytes: number,
         modifyTs: number,
-        modifyTsDesc: string
+        modifyTsDesc: string,
+        pageCode?: string
     }
 
     interface zipPageResult extends zipAtomResult {

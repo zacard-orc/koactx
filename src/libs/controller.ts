@@ -32,8 +32,13 @@ export const ctrPerf = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
 export const ctrSendDone = async (ctx: Koa.ExtendableContext) => {
 
+    const toDelCode = ctx.body.toDelCode
+    delete ctx.body['toDelCode']
+
     const ret: ApiFarm.gmResponse<any, any> = {
-        RSP_HEAD: {},
+        RSP_HEAD: {
+            ...toDelCode
+        },
         RSP_BODY: ctx.body
     }
 
@@ -121,16 +126,21 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
         const mtime = targetState.mtimeMs.toString().split('.')[0]
 
-        return zipFiles(path.resolve(__dirname, prefix), [el], `${fnameprefix}.${mtime}`);
+        const buff = fs.readFileSync(`${path.resolve(__dirname, prefix)}/${el}`)
+        const buffObj = JSON.parse(buff.toString())
+
+        return zipFiles(path.resolve(__dirname, prefix), [el], `${fnameprefix}.${mtime}`, buffObj?.pageCode);
     })
 
     const zipRet = await Promise.all(prAll)
 
     const pageConfigList = zipRet.map(el=>{
         const buff = fs.readFileSync(el.filepath)
+
         const fileSign = sm3(buff.toString())
 
         return {
+            pageCode: el.pageCode,
             fileSign,
             filePath: `${prefixDown}/${el.filename}`,
             fileTime: el.modifyTs.toString()
@@ -152,15 +162,90 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
     const otherObj = otherList.reduce((prev,el)=>{
         const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`)
-        console.log(buff.toString())
         const objSet = prev as any;
         objSet[el.fileKey] = JSON.parse(buff.toString())
         return prev
     },{})
 
+    const toDelCode: ApiFarm.headRes = {
+        TRAN_SUCCESS: '0000',
+        ERROR_CODE: '0000',
+        ERROR_MESSAGE: '0000'
+    }
+
+    if(ctx.query?.mock ==='error'){
+        toDelCode.TRAN_SUCCESS = '5001'
+        toDelCode.ERROR_CODE = '5001'
+        toDelCode.ERROR_MESSAGE = 'mock error'
+    }
+
     ctx.body = {
         pageConfigList,
-        ...otherObj
+        ...otherObj,
+        toDelCode
+    }
+    await next();
+}
+
+
+/*
+ 低优先级接口
+ wifi: http://172.30.139.50:5000/high/
+ inner: http://169.254.201.130:5000/high/
+ */
+export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
+    const prefix = '../src/Files/low';
+    const prefixDown = 'http://172.30.139.50:5000/low'
+    const {sm3} = sm;
+
+
+    const dir = fs.readdirSync(path.resolve(__dirname, prefix));
+    const flist = dir.filter(el => el.includes('.json'));
+
+    const prAll = flist.map(el=>{
+        const fnameprefix = el.split('.')[0];
+
+        const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
+        const mtime = targetState.mtimeMs.toString().split('.')[0]
+
+        const buff = fs.readFileSync(`${path.resolve(__dirname, prefix)}/${el}`)
+        const buffObj = JSON.parse(buff.toString())
+
+        return zipFiles(path.resolve(__dirname, prefix), [el], `${fnameprefix}.${mtime}`, buffObj?.pageCode);
+
+    })
+
+    const zipRet = await Promise.all(prAll)
+
+    const pageConfigList = zipRet.map(el=>{
+        const buff = fs.readFileSync(el.filepath)
+        const fileSign = sm3(buff.toString())
+
+        return {
+            pageCode: el.pageCode,
+            fileSign,
+            filePath: `${prefixDown}/${el.filename}`,
+            fileTime: el.modifyTs.toString(),
+            operateFlag: '2'
+        }
+    })
+
+
+    const toDelCode: ApiFarm.headRes = {
+        TRAN_SUCCESS: '0000',
+        ERROR_CODE: '0000',
+        ERROR_MESSAGE: '0000'
+    }
+
+    if(ctx.query?.mock ==='error'){
+        toDelCode.TRAN_SUCCESS = '5001'
+        toDelCode.ERROR_CODE = '5001'
+        toDelCode.ERROR_MESSAGE = 'mock error'
+    }
+
+    ctx.body = {
+        pageConfigList,
+        toDelCode
     }
     await next();
 }

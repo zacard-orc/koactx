@@ -11,6 +11,7 @@ import {
     ctrConfHighPri,
     ctrSendDone,
     ctrCC0001,
+    ctrCC0002,
 } from './libs/controller';
 
 const app = new Koa();
@@ -23,6 +24,7 @@ router.post('/api/v1/confHighPri', ctrConfHighPri);
 
 // mock配置中心
 router.post('/api/v1/CC0001', ctrCC0001);
+router.post('/api/v1/CC0002', ctrCC0002);
 
 
 app

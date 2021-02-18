@@ -1,0 +1,10 @@
+{
+  "pageCode": "BUS0005",
+  "bus": [
+    {
+      "age": 20,
+      "tags": ["a", "b", "c"],
+      "name": "bus"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "pageCode": "TRJ0003",
+  "transfer": [
+    {
+      "age": 20,
+      "tags": ["a", "b", "c"],
+      "name": "transfer",
+      "lab": "aaa"
+    }
+  ]
+}
