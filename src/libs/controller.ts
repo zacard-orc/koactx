@@ -37,7 +37,7 @@ export const ctrSendDone = async (ctx: Koa.ExtendableContext) => {
         RSP_BODY: ctx.body
     }
 
-    logger.info('=> body %j' ,ret);
+    logger.info('=> body %s' ,JSON.stringify(ret,null,2));
     ctx.body = ret;
 }
 
@@ -66,7 +66,7 @@ export const ctrSM3 = (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 }
 
 /*
- 高优先级接口
+ 高优先级接口-原始
  */
 export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     const prefix = '../src/Files';
@@ -80,6 +80,7 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
 
     const prAll = flist.map(el=>{
         const fnameprefix = el.split('.')[0];
+
         return zipFiles(path.resolve(__dirname, prefix), [el], fnameprefix);
     })
 
@@ -97,3 +98,70 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
     })
     await next();
 }
+
+
+/*
+ 高优先级接口
+ wifi: http://172.30.139.50:5000/high/
+ inner: http://169.254.201.130:5000/high/
+ */
+export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
+    const prefix = '../src/Files/high';
+    const prefixDown = 'http://172.30.139.50:5000/high'
+    const {sm3} = sm;
+
+
+    const dir = fs.readdirSync(path.resolve(__dirname, prefix));
+
+    const flist = dir.filter(el => el.includes('.json'));
+
+    const prAll = flist.map(el=>{
+        const fnameprefix = el.split('.')[0];
+
+        const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
+        const mtime = targetState.mtimeMs.toString().split('.')[0]
+
+        return zipFiles(path.resolve(__dirname, prefix), [el], `${fnameprefix}.${mtime}`);
+    })
+
+    const zipRet = await Promise.all(prAll)
+
+    const pageConfigList = zipRet.map(el=>{
+        const buff = fs.readFileSync(el.filepath)
+        const fileSign = sm3(buff.toString())
+
+        return {
+            fileSign,
+            filePath: `${prefixDown}/${el.filename}`,
+            fileTime: el.modifyTs.toString()
+        }
+    })
+
+    const prefixOther = '../src/Files';
+
+    const otherList = [
+        {
+            fileName: 'app.json',
+            fileKey: 'appConfigMap'
+        },
+        {
+            fileName: 'route.json',
+            fileKey: 'routeConfigMap'
+        }
+    ]
+
+    const otherObj = otherList.reduce((prev,el)=>{
+        const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`)
+        console.log(buff.toString())
+        const objSet = prev as any;
+        objSet[el.fileKey] = JSON.parse(buff.toString())
+        return prev
+    },{})
+
+    ctx.body = {
+        pageConfigList,
+        ...otherObj
+    }
+    await next();
+}
+

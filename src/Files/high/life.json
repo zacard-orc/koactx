@@ -1,5 +1,6 @@
 {
-  "people": [
+  "pageCode": "SYJ0003",
+  "life": [
     {
       "age": 20,
       "tags": ["a", "b", "c"],

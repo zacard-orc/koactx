@@ -15,8 +15,9 @@ export const wait = (tmout:number):Promise<string> => {
     })
 }
 
-export const zipFiles =
-    (fpath: string, flist: Array<string>, target: string): Promise<ApiFarm.zipAtomResult> => {
+export const zipFiles = (fpath: string,
+                         flist: Array<string>,
+                         target: string): Promise<ApiFarm.zipAtomResult> => {
 
     const fixpath = fpath.slice(-1) === '/'
         ? fpath.slice(0, -1)

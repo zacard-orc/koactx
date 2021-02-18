@@ -1,0 +1,20 @@
+{
+  "pageCode": "SYJ0001",
+  "people": [
+    {
+      "age": 20,
+      "tags": ["a", "b", "c"],
+      "name": "Bob"
+    },
+    {
+      "age": 25,
+      "tags": ["d", "e", "f"],
+      "name": "Fred"
+    },
+    {
+      "age": 30,
+      "tags": ["g", "h", "i"],
+      "name": "George"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import {
     ctrSM3,
     ctrConfHighPri,
     ctrSendDone,
+    ctrCC0001,
 } from './libs/controller';
 
 const app = new Koa();
@@ -18,7 +19,11 @@ const router = new Router();
 
 router.get('/', ctrHello);
 router.post('/api/sm3', ctrSM3);
-router.post('/api/ConfHighPri', ctrConfHighPri);
+router.post('/api/v1/confHighPri', ctrConfHighPri);
+
+// mock配置中心
+router.post('/api/v1/CC0001', ctrCC0001);
+
 
 app
     .use(bodyParser())

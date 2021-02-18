@@ -1,7 +1,16 @@
 declare namespace ApiFarm {
+
+
+
     interface gmResponse<T, F> {
         RSP_HEAD: T,
         RSP_BODY: F
+    }
+
+    interface headRes {
+        TRAN_SUCCESS: string,
+        ERROR_CODE: string,
+        ERROR_MESSAGE: string
     }
 
     interface sm3Request {
