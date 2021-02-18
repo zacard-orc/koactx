@@ -11,6 +11,8 @@ import {modMeta} from "./constant";
 
 import sm from 'sm-crypto'
 
+const confMtime: ApiFarm.ConfState = {}
+
 export const ctrPerf = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     const {
         url
@@ -125,10 +127,33 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     const prAll = flist.map(el => {
         const fnameprefix = el.split('.')[0];
 
-        const mtime = Date.now();
+        // 按模块merge所有文件
+        const mergeObj:any = {}
+        for(let modEl of modMeta){
+            const modElFullPath = path.resolve(__dirname, `${prefix}/${el}/${modEl}`);
+            mergeObj[modEl.split('.')[0]] = fs.readFileSync(modElFullPath).toString()
 
-        return zipFiles(path.resolve(__dirname, prefix+'/'+el),
-            modMeta,
+
+            const modState = fs.statSync(modElFullPath)
+            if(!confMtime[el]){
+                confMtime[el]=modState.mtimeMs
+                continue
+            }
+            if(modState.mtimeMs>confMtime[el]){
+                confMtime[el]=modState.mtimeMs
+            }
+        }
+
+        const mtime = confMtime[el].toString().split('.')[0];
+
+        const mergeFilePath = path.resolve(__dirname, `${prefix}/${el}`)
+        const mergeFileName = `${el}.json`
+        const mergeFileFullPath = `${mergeFilePath}/${mergeFileName}`
+
+        fs.writeFileSync(mergeFileFullPath,JSON.stringify(mergeObj))
+
+        return zipFiles(mergeFilePath,
+            [mergeFileName],
             `${fnameprefix}.${mtime}`,
             el);
     })
@@ -215,12 +240,35 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         const prefixDown = 'http://172.30.139.50:5000/' + wPriv+ '/' + pageCode;
         const {sm3} = sm;
 
-        const dirStat = fs.statSync(path.resolve(__dirname, prefix))
-        const mtime = dirStat.mtimeMs.toString().split('.')[0]
         // const mtime = Date.now()
 
-        const zipRet = await zipFiles(path.resolve(__dirname, prefix),
-            modMeta,
+
+        // 按模块merge所有文件
+        const mergeObj:any = {}
+        for(let modEl of modMeta){
+            const modElFullPath = path.resolve(__dirname, `${prefix}/${modEl}`);
+            mergeObj[modEl.split('.')[0]] = fs.readFileSync(modElFullPath).toString()
+
+            const modState = fs.statSync(modElFullPath)
+            if(!confMtime[pageCode]){
+                confMtime[pageCode]=modState.mtimeMs
+                continue
+            }
+            if(modState.mtimeMs>confMtime[pageCode]){
+                confMtime[pageCode]=modState.mtimeMs
+            }
+        }
+
+        const mtime = confMtime[pageCode].toString().split('.')[0];
+
+        const mergeFilePath = path.resolve(__dirname, `${prefix}`)
+        const mergeFileName = `${pageCode}.json`
+        const mergeFileFullPath = `${mergeFilePath}/${mergeFileName}`
+
+        fs.writeFileSync(mergeFileFullPath,JSON.stringify(mergeObj))
+
+        const zipRet = await zipFiles(mergeFilePath,
+            [mergeFileName],
             `${pageCode}.${mtime}`,
             pageCode);
 
@@ -285,13 +333,33 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         const prefixDown = 'http://172.30.139.50:5000/' + wPriv+ '/' + pageCode;
         const {sm3} = sm;
 
-        const dirStat = fs.statSync(path.resolve(prefix2))
-        const mtime = dirStat.mtimeMs.toString().split('.')[0]
 
-        // const mtime = Date.now()
+        // 按模块merge所有文件
+        const mergeObj:any = {}
+        for(let modEl of modMeta){
+            const modElFullPath = path.resolve(__dirname, `${prefix}/${modEl}`);
+            mergeObj[modEl.split('.')[0]] = fs.readFileSync(modElFullPath).toString()
 
-        const zipRet = await zipFiles(path.resolve(__dirname, prefix),
-            modMeta,
+            const modState = fs.statSync(modElFullPath)
+            if(!confMtime[pageCode]){
+                confMtime[pageCode]=modState.mtimeMs
+                continue
+            }
+            if(modState.mtimeMs>confMtime[pageCode]){
+                confMtime[pageCode]=modState.mtimeMs
+            }
+        }
+
+        const mtime = confMtime[pageCode].toString().split('.')[0];
+
+        const mergeFilePath = path.resolve(__dirname, `${prefix}`)
+        const mergeFileName = `${pageCode}.json`
+        const mergeFileFullPath = `${mergeFilePath}/${mergeFileName}`
+
+        fs.writeFileSync(mergeFileFullPath,JSON.stringify(mergeObj))
+
+        const zipRet = await zipFiles(mergeFilePath,
+            [mergeFileName],
             `${pageCode}.${mtime}`,
             pageCode);
 
@@ -300,12 +368,8 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
         const detailMap = modMeta.reduce((prev, el) => {
             const modBuff = fs.readFileSync(path.resolve(`${prefix2}/${el}`)).toString()
-            const {version} = JSON.parse(modBuff)
             const modName = el.split('.')[0];
-            (prev as any)[modName] = {
-                version,
-                dataContent: modBuff
-            }
+            (prev as any)[modName] = modBuff
             return prev;
         }, {})
 

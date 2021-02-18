@@ -51,5 +51,10 @@ declare namespace ApiFarm {
         modifyTs: string,
         modifyTsString: string
     }
+
+    interface ConfState{
+        pageCode?: number,
+        [index:string]:number
+    }
 }
 
