@@ -1,0 +1,11 @@
+{
+  "pageCode": "SYJ0003",
+  "floor": {
+    "version": "2234234",
+    "style": {
+      "age": 30,
+      "tags": ["g", "h", "i"],
+      "name": "George"
+    }
+  }
+}

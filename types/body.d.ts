@@ -30,6 +30,14 @@ declare namespace ApiFarm {
         pageCode?: string
     }
 
+    interface cc0003req {
+        processCode: string,
+        pageConfigList: Array<{
+            pageCode: string,
+            fileTime: string
+        }>
+    }
+
     interface zipPageResult extends zipAtomResult {
         pageCode: string
     }

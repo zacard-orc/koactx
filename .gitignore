@@ -12,4 +12,5 @@ tmphtml
 # gzip files
 src/Files/*.gzip
 src/Files/**/*.gzip
+src/Files/**/**/*.gzip
 

@@ -1,0 +1,19 @@
+{
+  "pageCode": "BUS0005",
+  "position": {
+    "version": "aaa",
+    "ct": {
+      "age": 20,
+      "tags": ["a", "b", "c"],
+      "name": "bus"
+    }
+  },
+  "floor": {
+    "version": "bbb",
+    "foo": "bar"
+  },
+  "icon": {
+    "version": "ccc",
+    "nice": "aaaa"
+  }
+}

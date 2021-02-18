@@ -32,8 +32,10 @@ export const ctrPerf = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
 export const ctrSendDone = async (ctx: Koa.ExtendableContext) => {
 
-    const toDelCode = ctx.body.toDelCode
-    delete ctx.body['toDelCode']
+    const toDelCode = ctx.body?.toDelCode
+    if (ctx.body) {
+        delete ctx?.body['toDelCode']
+    }
 
     const ret: ApiFarm.gmResponse<any, any> = {
         RSP_HEAD: {
@@ -42,7 +44,7 @@ export const ctrSendDone = async (ctx: Koa.ExtendableContext) => {
         RSP_BODY: ctx.body
     }
 
-    logger.info('=> body %s' ,JSON.stringify(ret,null,2));
+    logger.info('=> body %s', JSON.stringify(ret, null, 2));
     ctx.body = ret;
 }
 
@@ -83,7 +85,7 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
 
     const flist = dir.filter(el => el.includes('.json'));
 
-    const prAll = flist.map(el=>{
+    const prAll = flist.map(el => {
         const fnameprefix = el.split('.')[0];
 
         return zipFiles(path.resolve(__dirname, prefix), [el], fnameprefix);
@@ -91,7 +93,7 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
 
     const zipRet = await Promise.all(prAll)
 
-    ctx.body = zipRet.map(el=>{
+    ctx.body = zipRet.map(el => {
         const buff = fs.readFileSync(el.filepath)
         const digest = sm3(buff.toString())
 
@@ -120,7 +122,7 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
     const flist = dir.filter(el => el.includes('.json'));
 
-    const prAll = flist.map(el=>{
+    const prAll = flist.map(el => {
         const fnameprefix = el.split('.')[0];
 
         const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
@@ -134,7 +136,7 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
     const zipRet = await Promise.all(prAll)
 
-    const pageConfigList = zipRet.map(el=>{
+    const pageConfigList = zipRet.map(el => {
         const buff = fs.readFileSync(el.filepath)
 
         const fileSign = sm3(buff.toString())
@@ -160,12 +162,12 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         }
     ]
 
-    const otherObj = otherList.reduce((prev,el)=>{
+    const otherObj = otherList.reduce((prev, el) => {
         const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`)
         const objSet = prev as any;
         objSet[el.fileKey] = JSON.parse(buff.toString())
         return prev
-    },{})
+    }, {})
 
     const toDelCode: ApiFarm.headRes = {
         TRAN_SUCCESS: '0000',
@@ -173,7 +175,7 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         ERROR_MESSAGE: '0000'
     }
 
-    if(ctx.query?.mock ==='error'){
+    if (ctx.query?.mock === 'error') {
         toDelCode.TRAN_SUCCESS = '5001'
         toDelCode.ERROR_CODE = '5001'
         toDelCode.ERROR_MESSAGE = 'mock error'
@@ -202,7 +204,7 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     const dir = fs.readdirSync(path.resolve(__dirname, prefix));
     const flist = dir.filter(el => el.includes('.json'));
 
-    const prAll = flist.map(el=>{
+    const prAll = flist.map(el => {
         const fnameprefix = el.split('.')[0];
 
         const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
@@ -217,7 +219,7 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
     const zipRet = await Promise.all(prAll)
 
-    const pageConfigList = zipRet.map(el=>{
+    const pageConfigList = zipRet.map(el => {
         const buff = fs.readFileSync(el.filepath)
         const fileSign = sm3(buff.toString())
 
@@ -237,7 +239,7 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         ERROR_MESSAGE: '0000'
     }
 
-    if(ctx.query?.mock ==='error'){
+    if (ctx.query?.mock === 'error') {
         toDelCode.TRAN_SUCCESS = '5001'
         toDelCode.ERROR_CODE = '5001'
         toDelCode.ERROR_MESSAGE = 'mock error'
@@ -250,3 +252,75 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     await next();
 }
 
+
+/*
+ 补偿接口
+ wifi: http://172.30.139.50:5000/high/
+ inner: http://169.254.201.130:5000/high/
+ */
+export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
+
+    const priv = {
+        'SYJ0001': 'high',
+        'SYJ0003': 'high',
+        'BUS0005': 'low',
+        'TRJ0003': 'low',
+    }
+
+    const {pageConfigList} = ctx.request.body as ApiFarm.cc0003req;
+    const ret = [];
+
+    for (const el of pageConfigList) {
+
+        const pageCode = el.pageCode;
+        const wPriv = (priv as any)[el.pageCode]
+
+        const prefix = '../src/Files/' + wPriv;
+        const prefixDown = 'http://172.30.139.50:5000/' + wPriv;
+        const {sm3} = sm;
+
+        const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${pageCode}.json`)
+        const mtime = targetState.mtimeMs.toString().split('.')[0]
+
+        const buff = fs.readFileSync(`${path.resolve(__dirname, prefix)}/${pageCode}.json`)
+        const buffObj = JSON.parse(buff.toString())
+
+        const zipRet = await zipFiles(path.resolve(__dirname, prefix),
+            [`${pageCode}.json`],
+            `${pageCode}.${mtime}`,
+            buffObj?.pageCode);
+
+
+        const fileSign = sm3(buff.toString())
+
+        ret.push({
+            pageCode: zipRet.pageCode,
+            fileSign,
+            filePath: `${prefixDown}/${pageCode}.json`,
+            fileTime: zipRet.modifyTs.toString(),
+            operateFlag: '2',
+            detailMap: {
+                ...buffObj
+            }
+        })
+    }
+
+
+    const toDelCode: ApiFarm.headRes = {
+        TRAN_SUCCESS: '0000',
+        ERROR_CODE: '0000',
+        ERROR_MESSAGE: '0000'
+    }
+
+    if (ctx.query?.mock === 'error') {
+        toDelCode.TRAN_SUCCESS = '5001'
+        toDelCode.ERROR_CODE = '5001'
+        toDelCode.ERROR_MESSAGE = 'mock error'
+    }
+
+    ctx.body = {
+        pageConfigList: ret,
+        toDelCode
+    }
+    await next();
+}
