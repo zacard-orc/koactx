@@ -7,6 +7,7 @@ import path from 'path';
 import logger from "./logger";
 import {Socket} from "net";
 import {zipFiles, wait} from './utils'
+import {modMeta} from "./constant";
 
 import sm from 'sm-crypto'
 
@@ -119,32 +120,31 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
 
     const dir = fs.readdirSync(path.resolve(__dirname, prefix));
-
-    const flist = dir.filter(el => el.includes('.json'));
+    const flist = dir.filter(el => !el.includes('.'));
 
     const prAll = flist.map(el => {
         const fnameprefix = el.split('.')[0];
 
-        const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
-        const mtime = targetState.mtimeMs.toString().split('.')[0]
+        const mtime = Date.now();
 
-        const buff = fs.readFileSync(`${path.resolve(__dirname, prefix)}/${el}`)
-        const buffObj = JSON.parse(buff.toString())
-
-        return zipFiles(path.resolve(__dirname, prefix), [el], `${fnameprefix}.${mtime}`, buffObj?.pageCode);
+        return zipFiles(path.resolve(__dirname, prefix+'/'+el),
+            modMeta,
+            `${fnameprefix}.${mtime}`,
+            el);
     })
 
     const zipRet = await Promise.all(prAll)
 
     const pageConfigList = zipRet.map(el => {
         const buff = fs.readFileSync(el.filepath)
+        const prefixDownMod = `${prefixDown}/${el.pageCode}`
 
         const fileSign = sm3(buff.toString())
 
         return {
             pageCode: el.pageCode,
             fileSign,
-            filePath: `${prefixDown}/${el.filename}`,
+            filePath: `${prefixDownMod}/${el.filename}`,
             fileTime: el.modifyTs.toString()
         }
     })
@@ -196,41 +196,46 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
  inner: http://169.254.201.130:5000/high/
  */
 export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
-    const prefix = '../src/Files/low';
-    const prefixDown = 'http://172.30.139.50:5000/low'
-    const {sm3} = sm;
+    const priv = {
+        'SYJ0001': 'high',
+        'SYJ0003': 'high',
+        'BUS0005': 'low',
+        'TRJ0003': 'low',
+    }
+
+    const {pageConfigList} = ctx.request.body as ApiFarm.cc0003req;
+    const ret = [];
+
+    for (const el of pageConfigList) {
+
+        const pageCode = el.pageCode;
+        const wPriv = (priv as any)[el.pageCode]
+
+        const prefix = '../src/Files/' + wPriv + '/' + pageCode;
+        const prefixDown = 'http://172.30.139.50:5000/' + wPriv+ '/' + pageCode;
+        const {sm3} = sm;
+
+        const dirStat = fs.statSync(path.resolve(__dirname, prefix))
+        const mtime = dirStat.mtimeMs.toString().split('.')[0]
+        // const mtime = Date.now()
+
+        const zipRet = await zipFiles(path.resolve(__dirname, prefix),
+            modMeta,
+            `${pageCode}.${mtime}`,
+            pageCode);
+
+        const zipBuff = fs.readFileSync(zipRet.filepath)
+        const fileSign = sm3(zipBuff.toString())
 
 
-    const dir = fs.readdirSync(path.resolve(__dirname, prefix));
-    const flist = dir.filter(el => el.includes('.json'));
-
-    const prAll = flist.map(el => {
-        const fnameprefix = el.split('.')[0];
-
-        const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${el}`)
-        const mtime = targetState.mtimeMs.toString().split('.')[0]
-
-        const buff = fs.readFileSync(`${path.resolve(__dirname, prefix)}/${el}`)
-        const buffObj = JSON.parse(buff.toString())
-
-        return zipFiles(path.resolve(__dirname, prefix), [el], `${fnameprefix}.${mtime}`, buffObj?.pageCode);
-
-    })
-
-    const zipRet = await Promise.all(prAll)
-
-    const pageConfigList = zipRet.map(el => {
-        const buff = fs.readFileSync(el.filepath)
-        const fileSign = sm3(buff.toString())
-
-        return {
-            pageCode: el.pageCode,
+        ret.push({
+            pageCode: zipRet.pageCode,
             fileSign,
-            filePath: `${prefixDown}/${el.filename}`,
-            fileTime: el.modifyTs.toString(),
+            filePath: `${prefixDown}/${zipRet.filename}`,
+            fileTime: zipRet.modifyTs.toString(),
             operateFlag: '2'
-        }
-    })
+        })
+    }
 
 
     const toDelCode: ApiFarm.headRes = {
@@ -246,7 +251,7 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     }
 
     ctx.body = {
-        pageConfigList,
+        pageConfigList: ret,
         toDelCode
     }
     await next();
@@ -267,8 +272,6 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         'TRJ0003': 'low',
     }
 
-    const modMeta: Array<string> = ['floor.json', 'icon.json']
-
     const {pageConfigList} = ctx.request.body as ApiFarm.cc0003req;
     const ret = [];
 
@@ -279,10 +282,13 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
         const prefix = '../src/Files/' + wPriv + '/' + pageCode;
         const prefix2 = './src/Files/' + wPriv + '/' + pageCode;
-        const prefixDown = 'http://172.30.139.50:5000/' + wPriv;
+        const prefixDown = 'http://172.30.139.50:5000/' + wPriv+ '/' + pageCode;
         const {sm3} = sm;
 
-        const mtime = Date.now()
+        const dirStat = fs.statSync(path.resolve(prefix2))
+        const mtime = dirStat.mtimeMs.toString().split('.')[0]
+
+        // const mtime = Date.now()
 
         const zipRet = await zipFiles(path.resolve(__dirname, prefix),
             modMeta,
@@ -307,7 +313,7 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         ret.push({
             pageCode: zipRet.pageCode,
             fileSign,
-            filePath: `${prefixDown}/${pageCode}/${zipRet.filename}`,
+            filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime: zipRet.modifyTs.toString(),
             operateFlag: '2',
             detailMap
