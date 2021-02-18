@@ -267,6 +267,8 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         'TRJ0003': 'low',
     }
 
+    const modMeta: Array<string> = ['floor.json', 'icon.json']
+
     const {pageConfigList} = ctx.request.body as ApiFarm.cc0003req;
     const ret = [];
 
@@ -275,33 +277,40 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         const pageCode = el.pageCode;
         const wPriv = (priv as any)[el.pageCode]
 
-        const prefix = '../src/Files/' + wPriv;
+        const prefix = '../src/Files/' + wPriv + '/' + pageCode;
+        const prefix2 = './src/Files/' + wPriv + '/' + pageCode;
         const prefixDown = 'http://172.30.139.50:5000/' + wPriv;
         const {sm3} = sm;
 
-        const targetState = fs.statSync(`${path.resolve(__dirname, prefix)}/${pageCode}.json`)
-        const mtime = targetState.mtimeMs.toString().split('.')[0]
-
-        const buff = fs.readFileSync(`${path.resolve(__dirname, prefix)}/${pageCode}.json`)
-        const buffObj = JSON.parse(buff.toString())
+        const mtime = Date.now()
 
         const zipRet = await zipFiles(path.resolve(__dirname, prefix),
-            [`${pageCode}.json`],
+            modMeta,
             `${pageCode}.${mtime}`,
-            buffObj?.pageCode);
+            pageCode);
 
+        const zipBuff = fs.readFileSync(zipRet.filepath)
+        const fileSign = sm3(zipBuff.toString())
 
-        const fileSign = sm3(buff.toString())
+        const detailMap = modMeta.reduce((prev, el) => {
+            const modBuff = fs.readFileSync(path.resolve(`${prefix2}/${el}`)).toString()
+            const {version} = JSON.parse(modBuff)
+            const modName = el.split('.')[0];
+            (prev as any)[modName] = {
+                version,
+                dataContent: modBuff
+            }
+            return prev;
+        }, {})
+
 
         ret.push({
             pageCode: zipRet.pageCode,
             fileSign,
-            filePath: `${prefixDown}/${pageCode}.json`,
+            filePath: `${prefixDown}/${pageCode}/${zipRet.filename}`,
             fileTime: zipRet.modifyTs.toString(),
             operateFlag: '2',
-            detailMap: {
-                ...buffObj
-            }
+            detailMap
         })
     }
 
