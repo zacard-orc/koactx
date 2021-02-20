@@ -1,8 +1,6 @@
 {
-  "locations": [
-    {"name": "Seattle", "state": "WA"},
-    {"name": "New York", "state": "NY"},
-    {"name": "Bellevue", "state": "WA"},
-    {"name": "Olympia", "state": "WA"}
-  ]
+  "webview_number": 10,
+  "log_days": 7,
+  "worker_conf_down": 2,
+  "version": "2234234234234"
 }

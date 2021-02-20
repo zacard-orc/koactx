@@ -7,7 +7,7 @@ import path from 'path';
 import logger from "./logger";
 import {Socket} from "net";
 import {zipFiles, wait} from './utils'
-import {modMeta} from "./constant";
+import {modMeta,PREFIX_DOWN_URI} from "./constant";
 
 import sm from 'sm-crypto'
 
@@ -98,7 +98,7 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
 
     ctx.body = zipRet.map(el => {
         const buff = fs.readFileSync(el.filepath)
-        const digest = sm3(buff.toString())
+        const digest = sm3(buff.toString('binary'))
 
         return {
             ...el,
@@ -117,7 +117,7 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
  */
 export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     const prefix = '../src/Files/high';
-    const prefixDown = 'http://172.30.139.50:5000/high'
+    const prefixDown = `${PREFIX_DOWN_URI}/high`
     const {sm3} = sm;
 
 
@@ -164,13 +164,13 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         const buff = fs.readFileSync(el.filepath)
         const prefixDownMod = `${prefixDown}/${el.pageCode}`
 
-        const fileSign = sm3(buff.toString())
+        const fileSign = sm3(buff.toString('binary'))
 
         return {
             pageCode: el.pageCode,
             fileSign,
             filePath: `${prefixDownMod}/${el.filename}`,
-            fileTime: el.modifyTs.toString()
+            fileTime: el.filename.split('.')[1]
         }
     })
 
@@ -237,7 +237,7 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         const wPriv = (priv as any)[el.pageCode]
 
         const prefix = '../src/Files/' + wPriv + '/' + pageCode;
-        const prefixDown = 'http://172.30.139.50:5000/' + wPriv+ '/' + pageCode;
+        const prefixDown = PREFIX_DOWN_URI+'/' + wPriv+ '/' + pageCode;
         const {sm3} = sm;
 
         // const mtime = Date.now()
@@ -273,14 +273,14 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             pageCode);
 
         const zipBuff = fs.readFileSync(zipRet.filepath)
-        const fileSign = sm3(zipBuff.toString())
+        const fileSign = sm3(zipBuff.toString('binary'))
 
 
         ret.push({
             pageCode: zipRet.pageCode,
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
-            fileTime: zipRet.modifyTs.toString(),
+            fileTime:mtime,
             operateFlag: '2'
         })
     }
@@ -330,7 +330,7 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
         const prefix = '../src/Files/' + wPriv + '/' + pageCode;
         const prefix2 = './src/Files/' + wPriv + '/' + pageCode;
-        const prefixDown = 'http://172.30.139.50:5000/' + wPriv+ '/' + pageCode;
+        const prefixDown = PREFIX_DOWN_URI+'/' + wPriv+ '/' + pageCode;
         const {sm3} = sm;
 
 
@@ -364,7 +364,7 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             pageCode);
 
         const zipBuff = fs.readFileSync(zipRet.filepath)
-        const fileSign = sm3(zipBuff.toString())
+        const fileSign = sm3(zipBuff.toString('binary'))
 
         const detailMap = modMeta.reduce((prev, el) => {
             const modBuff = fs.readFileSync(path.resolve(`${prefix2}/${el}`)).toString()
@@ -378,7 +378,7 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             pageCode: zipRet.pageCode,
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
-            fileTime: zipRet.modifyTs.toString(),
+            fileTime: mtime,
             operateFlag: '2',
             detailMap
         })
