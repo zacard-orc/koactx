@@ -170,7 +170,9 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             pageCode: el.pageCode,
             fileSign,
             filePath: `${prefixDownMod}/${el.filename}`,
-            fileTime: el.filename.split('.')[1]
+            fileTime: el.filename.split('.')[1],
+            effectiveTime: '1609486316000',
+            invalidTime: '4070935916000'
         }
     })
 
@@ -281,7 +283,9 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime:mtime,
-            operateFlag: '2'
+            operateFlag: '0',
+            effectiveTime: '1609486316000',
+            invalidTime: '4070935916000'
         })
     }
 
@@ -379,8 +383,10 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime: mtime,
-            operateFlag: '2',
-            detailMap
+            operateFlag: '0',
+            detailMap,
+            effectiveTime: '1609486316000',
+            invalidTime: '4070935916000'
         })
     }
 

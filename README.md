@@ -25,4 +25,10 @@ curl -H "Content-Type: application/json" \
         "cryptoRet":"82ec580fe6d36ae4f81cae3c73f4a5b3b5a09c943172dc9053c69fd8e18dca1e"
     }
 }
+
+// 高优先级接口
+curl -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"plain":"abcd" }'  \
+  "http://127.0.0.1:3000/api/v1/CC0001" -v
 ```
