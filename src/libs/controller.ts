@@ -113,6 +113,7 @@ export const ctrConfHighPri = async (ctx: Koa.ExtendableContext, next: Koa.Next)
 /*
  高优先级接口
  wifi: http://172.30.139.50:5000/high/
+ hotspot: http://172.20.10.11:5000/high/
  inner: http://169.254.201.130:5000/high/
  */
 export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
@@ -230,11 +231,12 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     }
 
 
+    pageConfigList.pop()
 
     ctx.body = {
         confList: [
             ...pageConfigList,
-            ...otherObj
+            // ...otherObj,
         ],
         toDelCode
     }
