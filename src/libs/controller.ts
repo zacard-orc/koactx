@@ -166,13 +166,20 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
         const fileSign = sm3(buff.toString('binary'))
 
+        const fullpath = el.filepath.split('/').slice(0,-2)
+        fullpath.push(`${el.pageCode}/${el.pageCode}.json`);
+        // console.log(fullpath.join('/'))
+        const fullbuff = fs.readFileSync(fullpath.join('/')).toString()
+
         return {
-            pageCode: el.pageCode,
+            confId: el.pageCode,
+            confType: 'page',
             fileSign,
             filePath: `${prefixDownMod}/${el.filename}`,
             fileTime: el.filename.split('.')[1],
-            effectiveTime: '1609486316000',
-            invalidTime: '4070935916000'
+            detailMap: JSON.parse(fullbuff.toString())
+            // effectiveTime: '1609486316000',
+            // invalidTime: '4070935916000'
         }
     })
 
@@ -189,12 +196,26 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         }
     ]
 
-    const otherObj = otherList.reduce((prev, el) => {
-        const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`)
-        const objSet = prev as any;
-        objSet[el.fileKey] = JSON.parse(buff.toString())
-        return prev
-    }, {})
+    // const otherObj = otherList.reduce((prev, el) => {
+    //     const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`)
+    //     const objSet = prev as any;
+    //     objSet[el.fileKey] = JSON.parse(buff.toString())
+    //     return prev
+    // }, {})
+
+    const otherObj = otherList.map(( el) => {
+        const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`).toString()
+        const dtl = JSON.parse(buff)
+
+        return {
+            fileTime: dtl.version,
+            confId: el.fileKey,
+            confType: el.fileKey,
+            detailMap: dtl,
+            fileSign:'xxxx',
+            filePath: 'sssdfsdfs',
+        }
+    })
 
     const toDelCode: ApiFarm.headRes = {
         TRAN_SUCCESS: '0000',
@@ -208,9 +229,13 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         toDelCode.ERROR_MESSAGE = 'mock error'
     }
 
+
+
     ctx.body = {
-        pageConfigList,
-        ...otherObj,
+        confList: [
+            ...pageConfigList,
+            ...otherObj
+        ],
         toDelCode
     }
     await next();
@@ -279,13 +304,14 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
 
         ret.push({
-            pageCode: zipRet.pageCode,
+            confId: zipRet.pageCode,
+            confType: 'Page',
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime:mtime,
-            operateFlag: '0',
-            effectiveTime: '1609486316000',
-            invalidTime: '4070935916000'
+            operateFlag: '1',
+            // effectiveTime: '1609486316000',
+            // invalidTime: '4070935916000'
         })
     }
 
@@ -379,14 +405,15 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
 
         ret.push({
-            pageCode: zipRet.pageCode,
+            confId: zipRet.pageCode,
+            confType: 'Page',
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime: mtime,
             operateFlag: '0',
             detailMap,
-            effectiveTime: '1609486316000',
-            invalidTime: '4070935916000'
+            // effectiveTime: '1609486316000',
+            // invalidTime: '4070935916000'
         })
     }
 
