@@ -196,6 +196,7 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             fileKey: 'routeConfigMap'
         }
     ]
+    console.log(prefixOther,otherList)
 
     // const otherObj = otherList.reduce((prev, el) => {
     //     const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`)
@@ -204,19 +205,19 @@ export const ctrCC0001 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     //     return prev
     // }, {})
 
-    const otherObj = otherList.map(( el) => {
-        const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`).toString()
-        const dtl = JSON.parse(buff)
-
-        return {
-            fileTime: dtl.version,
-            confId: el.fileKey,
-            confType: el.fileKey,
-            detailMap: dtl,
-            fileSign:'xxxx',
-            filePath: 'sssdfsdfs',
-        }
-    })
+    // const otherObj = otherList.map(( el) => {
+    //     const buff = fs.readFileSync(`${path.resolve(__dirname, prefixOther)}/${el.fileName}`).toString()
+    //     const dtl = JSON.parse(buff)
+    //
+    //     return {
+    //         fileTime: dtl.version,
+    //         confId: el.fileKey,
+    //         confType: el.fileKey,
+    //         detailMap: dtl,
+    //         fileSign:'xxxx',
+    //         filePath: 'sssdfsdfs',
+    //     }
+    // })
 
     const toDelCode: ApiFarm.headRes = {
         TRAN_SUCCESS: '0000',
@@ -257,8 +258,16 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
         'TRJ0003': 'low',
     }
 
-    const {pageConfigList} = ctx.request.body as ApiFarm.cc0003req;
+    // const {pageConfigList} = ctx.request.body as ApiFarm.cc0003req;
+
+    const pageConfigList = [
+        {pageCode:'SYJ0001'},
+        {pageCode:'SYJ0003'},
+        {pageCode:'BUS0005'},
+        {pageCode:'TRJ0003'}
+    ]
     const ret = [];
+    // let i = 0;
 
     for (const el of pageConfigList) {
 
@@ -307,14 +316,16 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
 
         ret.push({
             confId: zipRet.pageCode,
-            confType: 'Page',
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime:mtime,
+            // operateFlag: i%2==0?'1':'2',
             operateFlag: '1',
             // effectiveTime: '1609486316000',
             // invalidTime: '4070935916000'
         })
+
+        // i+=1;
     }
 
 
@@ -331,7 +342,7 @@ export const ctrCC0002 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     }
 
     ctx.body = {
-        pageConfigList: ret,
+        confList: ret,
         toDelCode
     }
     await next();
@@ -412,7 +423,7 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
             fileSign,
             filePath: `${prefixDown}/${zipRet.filename}`,
             fileTime: mtime,
-            operateFlag: '0',
+            operateFlag: '1',
             detailMap,
             // effectiveTime: '1609486316000',
             // invalidTime: '4070935916000'
@@ -433,7 +444,7 @@ export const ctrCC0003 = async (ctx: Koa.ExtendableContext, next: Koa.Next) => {
     }
 
     ctx.body = {
-        pageConfigList: ret,
+        confList: ret,
         toDelCode
     }
     await next();

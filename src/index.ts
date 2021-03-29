@@ -2,6 +2,8 @@ import Koa from "koa";
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser'
 
+import Websocket from 'ws'
+
 
 import logger from './libs/logger'
 import {
@@ -42,3 +44,19 @@ app.listen(3000, () => {
 });
 
 // export default app;
+
+const wss = new Websocket.Server({port: 28080})
+logger.info('ws started at 28080');
+
+wss.on('connection',(ws: Websocket)=>{
+    logger.info('ws found new conn: %s',ws);
+    ws.on('message',(reqMsg:Websocket.Data)=>{
+        logger.info('ws <= %j',reqMsg)
+    })
+
+    const replyData = {
+        'Hello': 'somthing '+ Date.now()
+    }
+    ws.send(JSON.stringify(replyData))
+    logger.info('ws => %j',replyData)
+})
